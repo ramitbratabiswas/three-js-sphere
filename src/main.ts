@@ -1,24 +1,64 @@
-import './style.css'
-import typescriptLogo from './typescript.svg'
-import viteLogo from '/vite.svg'
-import { setupCounter } from './counter.ts'
+import './style.css';
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <div>
-    <a href="https://vitejs.dev" target="_blank">
-      <img src="${viteLogo}" class="logo" alt="Vite logo" />
-    </a>
-    <a href="https://www.typescriptlang.org/" target="_blank">
-      <img src="${typescriptLogo}" class="logo vanilla" alt="TypeScript logo" />
-    </a>
-    <h1>Vite + TypeScript</h1>
-    <div class="card">
-      <button id="counter" type="button"></button>
-    </div>
-    <p class="read-the-docs">
-      Click on the Vite and TypeScript logos to learn more
-    </p>
-  </div>
-`
+// Scene
+const scene : THREE.Scene = new THREE.Scene();
 
-setupCounter(document.querySelector<HTMLButtonElement>('#counter')!)
+// Create sphere
+const geometry : THREE.SphereGeometry = new THREE.SphereGeometry(3, 64, 64);
+const material : THREE.MeshStandardMaterial = new THREE.MeshStandardMaterial({
+  color: '#ffff88'
+})
+const mesh : THREE.Mesh = new THREE.Mesh(geometry, material);
+scene.add(mesh);
+
+// Sizes
+const sizes = {
+  width: window.innerWidth,
+  height: window.innerHeight
+}
+
+// Lighting
+const light = new THREE.PointLight(0xffffff, 1, 100);
+light.position.set(10, 10, 10);
+scene.add(light);
+
+// Camera
+const camera : THREE.PerspectiveCamera = new THREE.PerspectiveCamera(45, sizes.width / sizes.height, 0.1, 100);
+camera.position.z = 15;
+scene.add(camera);
+
+// Renderer
+const canvas : Element = document.querySelector('.webgl')!;
+const renderer : THREE.WebGLRenderer = new THREE.WebGLRenderer({ canvas });
+renderer.setPixelRatio(2);
+renderer.setSize(sizes.width, sizes.height);
+renderer.render(scene, camera);
+
+// Controls
+const controls = new OrbitControls(camera, canvas as HTMLElement);
+controls.enableDamping = true;
+controls.enablePan = false;
+controls.enableZoom = false;
+controls.autoRotate = true;
+
+
+// Resize
+window.addEventListener('resize', () => {
+  // Update sizes
+  sizes.width = window.innerWidth;
+  sizes.height = window.innerHeight;
+  // Update camera
+  camera.aspect = sizes.width / sizes.height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(sizes.width, sizes.height);
+});
+
+const loop = () => {
+  controls.update();
+  renderer.render(scene, camera);
+  window.requestAnimationFrame(loop);
+}
+
+loop();
